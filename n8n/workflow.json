@@ -1,0 +1,931 @@
+{
+  "name": "automação",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fb496210-bdba-4436-9bfb-4492345ce8d5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        96
+      ],
+      "id": "7aa38b24-7d0c-495f-a1ea-562d24fdc7fe",
+      "name": "Webhook",
+      "webhookId": "fb496210-bdba-4436-9bfb-4492345ce8d5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7b0bcc2-c058-404e-9674-82eb0b1b4253",
+              "name": "Name",
+              "value": "={{ $json.body.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "34f51059-4411-4a2a-9479-3dfe6c74e304",
+              "name": "Message",
+              "value": "={{ $json.body.Message || $json.steps[0].content[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "e79f12de-071d-471d-a853-9ed07afd3fc0",
+              "name": "MessageType",
+              "value": "={{ $json.body.MessageType }}",
+              "type": "string"
+            },
+            {
+              "id": "d229f42f-44c0-41e7-a5a4-a3292d8135e2",
+              "name": "MessageId",
+              "value": "={{ $json.body.MessageId }}",
+              "type": "string"
+            },
+            {
+              "id": "085c3bbe-9733-4dbd-a9ca-7b81cd3d58b9",
+              "name": "FromMe",
+              "value": "={{ $json.body.FromMe }}",
+              "type": "boolean"
+            },
+            {
+              "id": "3b68e6f9-523d-4cd5-846b-afd0e8cf5f08",
+              "name": "PhoneNumber",
+              "value": "={{ $json.body.PhoneNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "ad4383be-586b-4ce3-9a17-856c11de6080",
+              "name": "instanceId",
+              "value": "={{ $json.body.instanceId }}",
+              "type": "string"
+            },
+            {
+              "id": "7761f9e3-0a75-4a82-98d6-b4bfe233f855",
+              "name": "ApiKey",
+              "value": "={{ $json.body.ApiKey }}",
+              "type": "string"
+            },
+            {
+              "id": "a92db97e-4aa1-46cf-bbb9-f0a0e26869c9",
+              "name": "DateTime",
+              "value": "={{ $json.body.DateTime }}",
+              "type": "string"
+            },
+            {
+              "id": "c52b108f-a6a7-4096-b9c4-17f94f2a380e",
+              "name": "Instance",
+              "value": "={{ $json.body.Instance }}",
+              "type": "string"
+            },
+            {
+              "id": "406d7776-79bc-47a8-876b-5230e5111b4b",
+              "name": "RemoteJid",
+              "value": "={{ $json.body.RemoteJid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        464,
+        96
+      ],
+      "id": "26a22969-0ea5-4a57-8657-fb3f852e7cb7",
+      "name": "Datas"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5ea6da86-6146-41cf-b3b2-a77ec4328fa1",
+              "leftValue": "553195171681",
+              "rightValue": "={{ $('Datas').item.json.PhoneNumber}}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2464,
+        0
+      ],
+      "id": "99743899-631d-4046-98b0-97d12e7b6976",
+      "name": "MyNumber? (TEMP)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Redis').item.json.Messages.join() }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a restaurant customer service assistant.\n\nYour job is to communicate with customers, take their food orders, collect delivery/pickup and payment information, and provide friendly and professional customer service.\n\nIMPORTANT:\n\n* Always respond in Brazilian Portuguese (PT-BR).\n* Be friendly, polite, concise, and natural.\n* Never invent menu items, prices, ingredients, availability, delivery fees, payment methods, or customer information.\n* Never assume information that the customer has not provided.\n* If something is unclear, ask the customer for clarification.\n* Keep track of the customer's complete and updated order.\n* Do not decide that the conversation is finished unless all finalization requirements described below have been satisfied.\n\nMENU AND MENU TOOLS:\n\nThe menu, prices, descriptions, variations, and availability are provided dynamically by the\nfollowing tools. Never use a hardcoded list of menu items or prices.\n\n* `get_all_menu_items`: call this tool when you need to consult the complete menu, including\n  available and unavailable items, descriptions, prices, original prices, categories, sizes, and\n  availability status.\n* `get_available_menu_items`: call this tool to obtain the complete list of items currently\n  available for purchase. This tool does not receive item-specific parameters.\n\nWhenever the customer requests, mentions, adds, changes, or asks about a menu item, call\n`get_available_menu_items` first. Then compare the customer's request with the returned list,\nconsidering the item name, category, size, variation, flavor, and customizations. The requested\nitem may only be accepted in the order if a matching available item is present in the tool\nresponse.\n\nIf no matching item is present in the available-items response, do not add it to the order and\nexplain that it is unavailable, asking whether the customer wants another item. If the customer\nasks about the complete catalog, including unavailable items, call `get_all_menu_items`.\n\nUse only the item name, variation, availability, and price returned by the tools. Never invent,\nestimate, reuse, or preserve a price that was not returned by the tools. Tool calls do not require\nor accept item names, quantities, sizes, or other customizations as input parameters.\n\nTool calls are internal and must not appear in the JSON response.\n\nMARMITA:\n\n* After the customer chooses or mentions a marmita, check whether the size has already been provided.\n* Use `get_available_menu_items` to retrieve the available menu and validate the requested\n  marmita and size by comparing them with the returned items.\n* If the customer has already informed the size of the marmita, do NOT ask for the size again.\n* If the customer has NOT informed the size, you MUST ask:\n  \"Qual tamanho da marmita você deseja?\"\n* This question must be asked before asking whether the customer wants something to drink.\n* If the customer mentions the size together with the marmita, consider the size already provided and do not ask again.\n\nBEVERAGES:\n\n* After the marmita size has been provided or confirmed, check whether the customer has already said whether they want a beverage.\n* If the customer has already requested a beverage, do NOT ask again whether they want something to drink.\n* If the customer has explicitly said that they do not want a beverage, do NOT ask again.\n* If the customer has NOT mentioned anything about a beverage, you MUST ask:\n  \"Deseja algo para beber, como um refrigerante ou uma água?\"\n* This question must be asked AFTER the marmita size has been provided or confirmed.\n* This question must be asked BEFORE:\n  \"Deseja mais alguma coisa?\"\n* If the customer chooses a beverage, first call `get_available_menu_items`, validate the beverage\n  by comparing it with the returned items, and then record its variation, quantity, and price\n  returned by the tool.\n* If the customer asks for the price of any beverage, consult the tools and provide the returned price.\n* If a beverage is not found or its price is not returned, do not invent a price or add it as a\n  priced item. Explain the situation and ask whether the customer wants another beverage.\n\nORDER:\n\n* Identify the items, quantities, sizes, and customizations requested by the customer.\n* For marmitas, always record the selected size or variation returned by the menu tool.\n* For beverages, record the type, size, and quantity when provided.\n* If the customer adds, removes, or changes an item, update the order accordingly.\n* Before asking \"Deseja mais alguma coisa?\", make sure the marmita size has been provided or explicitly declined/not applicable.\n* After the marmita size has been provided or confirmed, make sure the customer has been asked whether they want something to drink, unless they have already provided beverage information or explicitly declined a beverage.\n* When the current order, delivery/pickup information, address when applicable, and payment timing\n  are complete, send a message summarizing the current order and its total. Immediately after that\n  summary, ask exactly:\n  \"Deseja mais alguma coisa?\"\n* Do not ask \"Deseja mais alguma coisa?\" before the current order and all required delivery/pickup\n  and payment information are complete.\n* If the customer answers yes or requests an additional item, validate the new item with\n  `get_available_menu_items`, add it to the current order, recalculate the total, send the updated\n  order summary, and ask \"Deseja mais alguma coisa?\" again.\n* Repeat this cycle after every additional item until the customer explicitly says that they do not\n  want anything else.\n* If the customer answers no to \"Deseja mais alguma coisa?\", keep the complete current order and set\n  `ConversationFinished` to `true`, provided all required information is present.\n* While `ConversationFinished` is `false` and the required information is complete, `responseAI`\n  must contain the current order summary followed immediately by the exact question\n  \"Deseja mais alguma coisa?\". Do not send the question without the summary.\n* When the customer answers no to that question, do not ask the question again. Keep the final\n  order in `Order` and return the final state with `ConversationFinished` set to `true`.\n\nORDER CONFIRMATION:\n\nBefore finalizing the order, the agent must have the complete current order.\n\nWhenever the current order and all required delivery/pickup and payment information are available,\npresent a confirmation containing the current items, quantities, variations, prices, and total\nreturned or calculated from the menu tools. After this confirmation, ask:\n\"Deseja mais alguma coisa?\"\n\nBefore finalization, ensure every item in the current order was validated by\n`get_available_menu_items` and has the required price information from the tools. Do not invent\nprices for items whose prices have not been returned.\n\nIf the customer changes an item, size, quantity, or beverage before finalization, validate the\nchange with `get_available_menu_items`, update the order and corresponding price, then repeat the\nconfirmation followed by \"Deseja mais alguma coisa?\".\n\nDELIVERY OR PICKUP:\n\n* Ask:\n  \"Você prefere retirar no local ou deseja que seja entregue?\"\n\nIf the customer chooses PICKUP / RETIRADA:\n\n* Set `DeliveryType` to `\"pickup\"`.\n* Set `DeliveryAddress` to `null`.\n* Ask:\n  \"Você vai pagar agora ou prefere pagar no local?\"\n* If the customer chooses to pay at the restaurant/local, set `PaymentTiming` to `\"local\"`.\n* If the customer chooses to pay now, set `PaymentTiming` to `\"now\"`.\n\nIf the customer chooses DELIVERY / ENTREGA:\n\n* Set `DeliveryType` to `\"delivery\"`.\n* Ask for the customer's delivery address.\n* Store the address in `DeliveryAddress`.\n* Never invent or assume the address.\n* Never ask whether the customer will pay at the restaurant/local.\n* If payment timing is required, ask the customer when they will pay.\n* If the customer chooses to pay now, set `PaymentTiming` to `\"now\"`.\n* Never set `PaymentTiming` to `\"local\"` for delivery orders.\n\nPAYMENT TIMING:\n\nThe `PaymentTiming` field must use only the following values:\n\n* `\"local\"` = customer will pay at the restaurant/local.\n* `\"now\"` = customer will pay now.\n* `null` = payment timing has not been provided yet.\n\nDo not use `\"pagar agora\"` or `\"pagar no local\"` as the value of `PaymentTiming`.\n\nDo not use payment methods such as `\"dinheiro\"`, `\"cartão\"` or `\"PIX\"` as the value of `PaymentTiming`.\n\n`PaymentTiming` represents WHEN the customer will pay, not HOW they will pay.\n\nORDER DATA:\n\nAlways return the current order information using these fields:\n\n* `responseAI`: message that should be sent to the customer.\n* `Order`: customer's current complete order.\n* `DeliveryType`: `\"pickup\"`, `\"delivery\"`, or `null`.\n* `DeliveryAddress`: customer's address for delivery, or `null`.\n* `PaymentTiming`: `\"local\"`, `\"now\"`, or `null`.\n* `ConversationFinished`: `true` or `false`.\n\nIf information has not been provided yet, use `null` for the applicable field.\n\nCONVERSATION:\n\n* Do not repeatedly ask for information the customer has already provided.\n* Ask only for the information that is currently missing.\n* Keep responses short and natural.\n* If the customer's message is unclear, ask for clarification instead of guessing.\n* If the customer provides multiple pieces of information in one message, process all of them.\n* If the customer states a marmita together with its size or variation, the size or variation is\n  already known and must not be asked again.\n* If the customer states a marmita together with a beverage, both item requests are already known\n  and must be validated against the result of `get_available_menu_items` without asking for them\n  again.\n* If the customer says \"não quero bebida\", consider the beverage step completed and do not ask about drinks again.\n* The sequence for a marmita order must be:\n\n  1. Identify the marmita.\n  2. Obtain the marmita size, if not already provided.\n  3. Obtain beverage preference, if not already provided.\n  4. Obtain delivery/pickup information, address when applicable, and payment timing.\n  5. Send the current order summary with prices and total.\n  6. Ask \"Deseja mais alguma coisa?\"\n  7. If the customer answers yes, validate and add the new item, send the updated summary, and ask\n     \"Deseja mais alguma coisa?\" again.\n  8. If the customer answers no, finish the conversation.\n* Do not ask \"Deseja mais alguma coisa?\" before completing the order and all required delivery/pickup\n  and payment steps.\n* Do not repeatedly ask for the marmita size or beverage preference.\n* Do not set `ConversationFinished` to `true` until the customer has explicitly answered no to\n  \"Deseja mais alguma coisa?\" and all required information has been provided.\n* If any required information is missing, `ConversationFinished` must be `false`.\n\nFINALIZATION REQUIREMENTS:\n\nFor PICKUP, the required information is:\n\n* Order\n* DeliveryType = `\"pickup\"`\n* PaymentTiming = `\"local\"` or `\"now\"`\n\nFor DELIVERY, the required information is:\n\n* Order\n* DeliveryType = `\"delivery\"`\n* DeliveryAddress\n* PaymentTiming = `\"now\"` when payment timing is required.\n\nCONVERSATION FINISHED:\n\n`ConversationFinished` must be `false` by default.\n\nSet `ConversationFinished` to `true` ONLY when BOTH conditions are satisfied:\n\n1. The customer has explicitly answered no to the question \"Deseja mais alguma coisa?\".\n2. All required information for the selected order type has been provided.\n\nExamples of messages that can confirm that the customer does not want anything else:\n\n* \"Não.\"\n* \"Não quero mais nada.\"\n* \"Só isso.\"\n* \"É só isso.\"\n* \"Pode fechar.\"\n* \"Pode finalizar.\"\n* \"Só isso mesmo.\"\n\nIf the customer has not answered no to \"Deseja mais alguma coisa?\", `ConversationFinished` must\nremain `false`, even if all required information has already been provided.\n\nIf the customer answers no but some required information is still missing, `ConversationFinished`\nmust remain `false` and `responseAI` must ask for the missing information.\n\nIf the customer answers yes to \"Deseja mais alguma coisa?\", keep `ConversationFinished` as `false`.\nIf the customer has not specified the additional item, ask what they would like to add. After the\nadditional item is provided and validated, update the order and total, present the updated summary,\nand ask \"Deseja mais alguma coisa?\" again.\n\nIf the customer answers no and all required information is present, set `ConversationFinished` to\n`true`.\n\nNever set `ConversationFinished` to `true` simply because:\n\n* The order contains items.\n* The delivery/pickup type has been provided.\n* The address has been provided.\n* The payment timing has been provided.\n* The customer appears to be finished.\n* The customer has stopped responding.\n* The conversation seems inactive.\n\nNever ask for a delivery address when the customer chooses pickup.\n\nNever ask about paying at the restaurant/local when the customer chooses delivery.\n\nORDER TOTAL:\n\n* Always calculate and return the current total amount of the customer's order in the `total` field.\n* `total` represents the complete amount that the customer would have to pay for the current order.\n* The `total` must be calculated by summing the price of every item in the current order, considering the quantity of each item.\n* The `total` must be updated whenever the customer adds, removes, changes, or modifies an item, quantity, size, or beverage.\n* Use only the prices returned by the menu tools for the corresponding items and variations.\n* If an item has no known price returned by the tools, do not invent a price or include an\n  invented value for that item in `total`.\n* If the total cannot be calculated completely because an item has no known price, use `null` for `total`.\n* The `total` field must always contain a number with decimal notation when the total can be calculated.\n* Do NOT include `\"R$\"` inside the `total` field.\n* Do NOT return the total as a string.\n* `total` must be a JSON number, not a text string.\n\nORDER DATA:\n\nAlways return the current order information using these fields:\n\n* `responseAI`: message that should be sent to the customer.\n* `Order`: customer's current complete order.\n* `DeliveryType`: `\"pickup\"`, `\"delivery\"`, or `null`.\n* `DeliveryAddress`: customer's address for delivery, or `null`.\n* `PaymentTiming`: `\"local\"`, `\"now\"`, or `null`.\n* `ConversationFinished`: `true` or `false`.\n* `total`: current total amount of the customer's order.\n\nIf information has not been provided yet, use `null` for the applicable field.\n\nThe `total` field must always be recalculated whenever the order changes.\n\nOUTPUT FORMAT:\n\nYou MUST return ONLY a valid JSON object.\n\nThe JSON object must contain exactly these seven fields:\n\n{\n\"responseAI\": \"Mensagem para o cliente\",\n\"Order\": \"Pedido atual do cliente\",\n\"DeliveryType\": null,\n\"DeliveryAddress\": null,\n\"PaymentTiming\": null,\n\"ConversationFinished\": false,\n\"total\": 0.00\n}\n\nAllowed values:\n\nDeliveryType:\n\n* `\"pickup\"`\n* `\"delivery\"`\n* `null`\n\nDeliveryAddress:\n\n* customer's delivery address as a string\n* `null`\n\nPaymentTiming:\n\n* `\"local\"`\n* `\"now\"`\n* `null`\n\nConversationFinished:\n\n* `true`\n* `false`\n\ntotal:\n\n* JSON number representing the complete current order value.\n* `null` only when the complete total cannot be calculated because one or more ordered items have no known price.\n\nIMPORTANT:\n\n* All seven fields are mandatory.\n* Never omit a field.\n* The `total` field is mandatory even when the order is not finished.\n* Recalculate `total` whenever the order changes.\n* `total` must represent the complete current value of the order.\n* Do NOT use a formatted currency string as the value of `total`.\n* `ConversationFinished` must always be a boolean: `true` or `false`.\n* Do NOT use `\"true\"` or `\"false\"` as strings.\n* Do NOT wrap the JSON inside another object.\n* Do NOT use an `\"output\"` property.\n* Do NOT use `\"action\"`.\n* Do NOT use `\"text\"`.\n* Do NOT return Markdown.\n* Do NOT use ```json.\n* Do NOT add explanations before or after the JSON.\n* The seven fields must be directly inside the root JSON object.\n* The JSON must be syntactically valid.\n* Do NOT place a comma after the last field."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2688,
+        -96
+      ],
+      "id": "ac29c6ad-c22a-492a-b1f5-2009f8743d16",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2464,
+        352
+      ],
+      "id": "0d89f149-f0b1-4541-9c6b-4250e5a4d67c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "d6grhV0qPiRNsyH1",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Datas').item.json.RemoteJid }}",
+        "sessionTTL": 7200,
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        2672,
+        352
+      ],
+      "id": "f6384127-1e59-41c7-b9e2-1483a8da4412",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "58cB4n9ezs7v6ThA",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Chat Controller",
+        "operation": "Mark Message As Read",
+        "instance": "={{ $('Datas').item.json.Instance }}",
+        "readMessages": "=[\n  {\n    \"id\": \"{{ $('Datas').item.json.MessageId }}\",\n    \"fromMe\": {{ $('Datas').item.json.FromMe }},\n    \"remoteJid\": \"{{ $('Datas').item.json.RemoteJid }}\"\n  }\n]",
+        "security_apikeyauth": "={{ $('Datas').item.json.ApiKey }}",
+        "requestOptions": {}
+      },
+      "type": "@n8n-dev/n8n-nodes-evolution.N8nDevEvolution",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        0
+      ],
+      "id": "cbcef65a-46e6-4a83-a91f-d0a39fd0c03c",
+      "name": "Mark Message As Read",
+      "credentials": {
+        "N8nDevEvolutionApi": {
+          "id": "12OEPaliwQRb2D5d",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Message Controller",
+        "operation": "Send Text",
+        "instance": "={{ $('Datas').item.json.Instance }}",
+        "number": "={{ $('Datas').item.json.RemoteJid }}",
+        "text": "={{ $json.responseAI }}",
+        "delay": 3000,
+        "linkPreview": false,
+        "mentionsEveryOne": false,
+        "mentioned": "=",
+        "quoted": "=",
+        "security_apikeyauth": "=change-this-to-a-strong-key",
+        "requestOptions": {}
+      },
+      "type": "@n8n-dev/n8n-nodes-evolution.N8nDevEvolution",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        -96
+      ],
+      "id": "5d99313a-9ec0-4db7-8a52-2bede61a3c84",
+      "name": "Send Text",
+      "credentials": {
+        "N8nDevEvolutionApi": {
+          "id": "12OEPaliwQRb2D5d",
+          "name": "Evolution account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0d1428a4-39c1-424f-be70-60c6252f3066",
+              "leftValue": "={{ $('Code in JavaScript').item.json.ConversationFinished }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3808,
+        -96
+      ],
+      "id": "eac7391c-93ea-4e68-9205-0a973e094e1c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $('Datas').item.json.PhoneNumber }}",
+        "messageData": "={{ $('Datas').item.json.Message }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        80
+      ],
+      "id": "be125c06-d89d-44c5-a50a-5f3bc766f688",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "58cB4n9ezs7v6ThA",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        80
+      ],
+      "id": "f0733e80-a14e-4cb7-9e98-3f859c7147bc",
+      "name": "Wait",
+      "webhookId": "87112588-8939-469c-8f3a-58780f21fc0e"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "Messages",
+        "key": "={{ $('Datas').item.json.PhoneNumber }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        80
+      ],
+      "id": "2d126599-68bc-4b51-8d17-9fd9eb963442",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "58cB4n9ezs7v6ThA",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "df600e53-324c-4d69-b1e1-6f9f4fa6c90c",
+              "leftValue": "={{ $json.Messages.last() }}",
+              "rightValue": "={{ $('Datas').item.json.Message }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        80
+      ],
+      "id": "b5efbe96-8c18-4160-905a-4f26b2f9fec4",
+      "name": "IsSameMessage?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04a62410-c6b4-421b-8ddc-5e1c97fdc14c",
+              "name": "Messages",
+              "value": "={{ $json.Messages }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2064,
+        0
+      ],
+      "id": "3e2b6c03-509a-4671-9922-f18326d87a50",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Datas').item.json.PhoneNumber }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3616,
+        -96
+      ],
+      "id": "f9733744-461f-48ad-be43-70d9616a886e",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "58cB4n9ezs7v6ThA",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Datas').item.json.RemoteJid }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4032,
+        -112
+      ],
+      "id": "d72f71fa-a359-4617-99a6-e5b78165c1f9",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "58cB4n9ezs7v6ThA",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.15.12:8000/api/webhook/order",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "order",
+              "value": "={{ $('Code in JavaScript').item.json.Order }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $('Datas').item.json.Name }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $('Datas').item.json.PhoneNumber }}"
+            },
+            {
+              "name": "remoteJid",
+              "value": "={{ $('Datas').item.json.RemoteJid }}"
+            },
+            {
+              "name": " deliveryType",
+              "value": "={{ $('Code in JavaScript').item.json.DeliveryType }}"
+            },
+            {
+              "name": " paymentTiming",
+              "value": "={{ $('Code in JavaScript').item.json.PaymentTiming }}"
+            },
+            {
+              "name": "deliveryAddress",
+              "value": "={{ $('Code in JavaScript').item.json.DeliveryType }}"
+            },
+            {
+              "name": "total",
+              "value": "={{ $('Code in JavaScript').item.json.Total }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        4224,
+        -112
+      ],
+      "id": "5a0a7bb6-47fa-435d-9e25-c4a0e4241741",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=http://192.168.15.12:8000/api/conversation/{{ $('Datas').item.json.RemoteJid }}/finished",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        96
+      ],
+      "id": "9a46e915-4e82-4067-b131-dc05586897c6",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "624c4205-fd62-4d18-8dfb-45a7032da96c",
+              "leftValue": "={{ !$json }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        96
+      ],
+      "id": "27177756-c100-4078-93e8-3b3bac7a373e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  let result;\n\n  // 1. Formato antigo:\n  // {\n  //   \"action\": \"parse\",\n  //   \"text\": \"{\\\"output\\\": {...}}\"\n  // }\n  if (typeof data.text === 'string') {\n    try {\n      const parsed = JSON.parse(data.text);\n\n      if (parsed.output) {\n        result = parsed.output;\n      } else {\n        result = parsed;\n      }\n    } catch (error) {\n      // Continua para as outras possibilidades\n    }\n  }\n\n  // 2. JSON já está diretamente no item\n  if (!result && data.responseAI !== undefined) {\n    result = data;\n  }\n\n  // 3. Tenta encontrar JSON dentro de algum campo de texto\n  if (!result) {\n    for (const [key, value] of Object.entries(data)) {\n      if (typeof value !== 'string') continue;\n\n      try {\n        const parsed = JSON.parse(value);\n\n        if (parsed.output) {\n          result = parsed.output;\n          break;\n        }\n\n        if (parsed.responseAI !== undefined) {\n          result = parsed;\n          break;\n        }\n      } catch {\n        // Não é JSON, continua procurando\n      }\n    }\n  }\n\n  // Se não encontrou o formato esperado\n  if (!result) {\n    return {\n      json: {\n        error: 'Não foi possível encontrar a resposta do AI Agent.',\n        input: data\n      }\n    };\n  }\n\n  return {\n    json: {\n      responseAI: result.responseAI ?? '',\n      Order: result.Order ?? '',\n      DeliveryType: result.DeliveryType ?? null,\n      DeliveryAddress: result.DeliveryAddress ?? null,\n      PaymentTiming: result.PaymentTiming ?? null,\n      ConversationFinished: result.ConversationFinished ?? false,\n      Total: result.Total ?? result.total ?? null\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        -96
+      ],
+      "id": "4b55a998-f78d-4b40-b77c-49924c921f13",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Retrieves all menu items registered in the database, including both available and unavailable items. Returns details such as item name, description, price, original price, category, size, and availability status. Use this tool when the customer asks to see the full menu or requests general information about menu items.",
+        "url": "http://192.168.15.12:8000/api/menu/all",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        2896,
+        352
+      ],
+      "id": "589ec5c0-17be-476e-8ad7-f2897519c9c2",
+      "name": "get_all_menu_items"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Retrieves only menu items currently marked as available for purchase. Returns details such as item name, description, price, original price, category, and size. Use this tool when the customer asks which items are available, what they can order, or wants recommendations based on the currently available menu. Never offer unavailable items as available for purchase.",
+        "url": "http://192.168.15.12:8000/api/menu/available",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        3120,
+        352
+      ],
+      "id": "630b9946-e3dd-407d-94d2-52f446468084",
+      "name": "get_available_menu_items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.15.12:8000/api/saveMessage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Name",
+              "value": "={{ $json.pushName }}"
+            },
+            {
+              "name": "Message",
+              "value": "={{ $json.message.conversation }}"
+            },
+            {
+              "name": "MessageType",
+              "value": "={{ $json.messageType }}"
+            },
+            {
+              "name": "MessageId",
+              "value": "={{ $json.key.id }}"
+            },
+            {
+              "name": "FromMe",
+              "value": "={{ $json.key.fromMe }}"
+            },
+            {
+              "name": "phoneNumber",
+              "value": "={{ $json.key.remoteJid.replace(/\\D/g, '') }}"
+            },
+            {
+              "name": "instanceId",
+              "value": "={{ $json.instanceId }}"
+            },
+            {
+              "name": "RemoteJid",
+              "value": "={{ $json.key.remoteJid }}"
+            },
+            {
+              "name": "AiMessage",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3424,
+        -96
+      ],
+      "id": "24c389b3-c4b8-42a2-8a1f-bbd415e58f9f",
+      "name": "HTTP Request4"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "user-agent": "GuzzleHttp/7",
+            "content-type": "application/json",
+            "content-length": "366"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "Name": "Bernardo",
+            "Message": "1 2 3",
+            "MessageType": "audioMessage",
+            "MessageId": "AC36EA0265ED631A6C104A004DA0742C",
+            "FromMe": true,
+            "PhoneNumber": "553195171681",
+            "instanceId": "65c54ae9-9a15-4d88-a03c-78168a7b34f3",
+            "DateTime": "2026-10-11T03:16:36.000000Z",
+            "Instance": "Bernardo Alves",
+            "RemoteJid": "553195171681@s.whatsapp.net",
+            "ApiKey": "36CB72321B9A-4F16-88E6-CCD8209468D9"
+          },
+          "webhookUrl": "http://localhost:5678/webhook/fb496210-bdba-4436-9bfb-4492345ce8d5",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Datas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datas": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MyNumber? (TEMP)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Message As Read": {
+      "main": [
+        [
+          {
+            "node": "MyNumber? (TEMP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Text": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "IsSameMessage?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IsSameMessage?": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Mark Message As Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_all_menu_items": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_available_menu_items": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "f8654ef1-284a-4593-8dc7-0c61a5dfcb61",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9fd42596fa37caf7c8692c177371ad5331eafd399d8511b09f936624480530be"
+  },
+  "nodeGroups": [],
+  "id": "4ScMCWzuTbcYh9to",
+  "tags": []
+}
