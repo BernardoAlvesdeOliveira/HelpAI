@@ -1,24 +1,24 @@
 # HelpAI
 
-Sistema de atendimento automatizado para pedidos de restaurante via WhatsApp. O projeto combina uma aplicação Laravel, painel administrativo Filament, Evolution API, n8n, Redis e Google Gemini.
+Automated restaurant order support system via WhatsApp. The project combines a Laravel application, Filament admin panel, Evolution API, n8n, Redis, and Google Gemini.
 
-## Visão geral
+## Overview
 
-Fluxo principal:
+Main flow:
 
-1. O cliente envia uma mensagem pelo WhatsApp.
-2. A Evolution API encaminha o evento para o webhook Laravel.
-3. O Laravel valida e persiste a mensagem.
-4. O Laravel envia a mensagem para o webhook do n8n.
-5. O n8n agrupa mensagens, consulta o cardápio e processa a conversa com Google Gemini.
-6. A resposta retorna ao cliente pela Evolution API.
-7. O n8n persiste a resposta no Laravel.
-8. Após a confirmação do pedido, o n8n envia os dados para o webhook de pedidos.
-9. O Laravel cria o pedido e atualiza o painel administrativo em tempo real.
+1. The customer sends a message through WhatsApp.
+2. Evolution API forwards the event to the Laravel webhook.
+3. Laravel validates and persists the message.
+4. Laravel sends the message to the n8n webhook.
+5. n8n batches messages, checks the menu, and processes the conversation with Google Gemini.
+6. The response is sent back to the customer through Evolution API.
+7. n8n persists the response in Laravel.
+8. After order confirmation, n8n sends the data to the order webhook.
+9. Laravel creates the order and updates the admin panel in real time.
 
-## Automação n8n
+## n8n Automation
 
-Arquivo principal:
+Main file:
 
 ```text
 n8n/workflow.json
@@ -26,63 +26,63 @@ n8n/workflow.json
 
 Workflow: `automação`.
 
-![Workflow n8n](public/images/workflow.png)
+![n8n Workflow](public/images/workflow.png)
 
-### Sequência
+### Sequence
 
-1. `Webhook` recebe a mensagem.
-2. `Datas` normaliza nome, texto, tipo, IDs, telefone, instância e horário.
-3. `HTTP Request1` consulta o estado da conversa no Laravel.
-4. `If1` decide se a mensagem continua no fluxo.
-5. `Redis1` agrupa mensagens por telefone.
-6. `Wait` aguarda 15 segundos para reunir mensagens próximas.
-7. `Redis` recupera a fila `Messages`.
-8. `IsSameMessage?` garante que somente a mensagem mais recente avance.
-9. `Mark Message As Read` marca a mensagem na Evolution API.
-10. `AI Agent` interpreta a conversa e conduz o atendimento.
-11. `Google Gemini Chat Model` fornece o modelo de linguagem.
-12. `Redis Chat Memory` mantém contexto por conversa.
-13. `get_all_menu_items` e `get_available_menu_items` consultam o Laravel.
-14. `Code in JavaScript` normaliza resposta, pedido, entrega, pagamento, total e status.
-15. `Send Text` envia a resposta ao cliente.
-16. `HTTP Request4` salva a resposta no Laravel.
-17. `Redis2` limpa a fila do telefone.
-18. `If` verifica `ConversationFinished`.
-19. `Redis3` limpa a memória temporária da conversa.
-20. `HTTP Request` envia o pedido finalizado para `/api/webhook/order`.
+1. `Webhook` receives the message.
+2. `Datas` normalizes name, text, type, IDs, phone, instance, and timestamp.
+3. `HTTP Request1` checks the conversation state in Laravel.
+4. `If1` decides whether the message continues in the flow.
+5. `Redis1` batches messages by phone number.
+6. `Wait` delays 15 seconds to gather nearby messages.
+7. `Redis` retrieves the `Messages` queue.
+8. `IsSameMessage?` ensures only the latest message moves forward.
+9. `Mark Message As Read` marks the message in Evolution API.
+10. `AI Agent` interprets the conversation and handles support.
+11. `Google Gemini Chat Model` provides the language model.
+12. `Redis Chat Memory` keeps per-conversation context.
+13. `get_all_menu_items` and `get_available_menu_items` query Laravel.
+14. `Code in JavaScript` normalizes response, order, delivery, payment, total, and status.
+15. `Send Text` sends the response to the customer.
+16. `HTTP Request4` saves the response in Laravel.
+17. `Redis2` clears the phone queue.
+18. `If` checks `ConversationFinished`.
+19. `Redis3` clears temporary conversation memory.
+20. `HTTP Request` sends the completed order to `/api/webhook/order`.
 
-### Regras do agente
+### Agent rules
 
-O agente atende em português brasileiro e conduz:
+The agent serves in Brazilian Portuguese and handles:
 
-- Seleção de itens do cardápio
-- Quantidade e preço
-- Marmitas e bebidas
-- Entrega ou retirada
-- Endereço de entrega
-- Momento do pagamento
-- Confirmação do pedido
-- Total final
+- Menu item selection
+- Quantity and price
+- Meal boxes and drinks
+- Delivery or pickup
+- Delivery address
+- Payment timing
+- Order confirmation
+- Final total
 
-`ConversationFinished` só deve ser `true` após confirmação explícita do cliente e preenchimento dos dados obrigatórios.
+`ConversationFinished` should only be `true` after explicit customer confirmation and all required data is filled.
 
-### Credenciais
+### Credentials
 
-O workflow referencia credenciais do n8n para:
+The workflow references n8n credentials for:
 
 - Google Gemini
 - Redis
 - Evolution API
 
-O arquivo contém nomes e IDs de credenciais, não segredos. Configure credenciais no n8n e não publique chaves no repositório.
+The file contains credential names and IDs, not secrets. Configure credentials in n8n and do not publish keys in the repository.
 
-### Pontos de operação
+### Operational notes
 
-- O workflow possui URLs internas configuradas diretamente em alguns nós. Ajuste-as para cada ambiente.
-- O `pinData` do arquivo pode conter payloads de execução e dados de WhatsApp. Revise esses dados antes de compartilhar o workflow.
-- O Laravel precisa estar acessível pelo n8n.
-- Redis deve ser compartilhado ou corretamente endereçado entre Laravel e n8n quando a aplicação depender do mesmo estado.
-- O workflow usa uma espera de 15 segundos para agrupar mensagens consecutivas.
+- The workflow has internal URLs configured directly in some nodes. Adjust them per environment.
+- The file's `pinData` may contain execution payloads and WhatsApp data. Review this data before sharing the workflow.
+- Laravel must be reachable by n8n.
+- Redis must be shared or correctly addressed between Laravel and n8n when the application depends on the same state.
+- The workflow uses a 15-second wait to group consecutive messages.
 
 ## Stacks
 
@@ -99,82 +99,82 @@ O arquivo contém nomes e IDs de credenciais, não segredos. Configure credencia
 
 ### Frontend
 
-- Node.js e npm
+- Node.js and npm
 - Vite `^8.0.0`
 - Vite Plus `0.3.0`
 - Tailwind CSS `^4.0.7`
 - Laravel Vite Plugin `^3.1`
 - Laravel Echo `^2.5.0`
 - Pusher JS `^8.6.0`
-- Blade, Alpine.js e Livewire
+- Blade, Alpine.js, and Livewire
 
-### Qualidade
+### Quality
 
 - PHPUnit `^12.5.23`
 - Larastan `^3.9`
 - Laravel Pint `^1.27`
 
-### Serviços de infraestrutura
+### Infrastructure services
 
-- MySQL ou SQLite para desenvolvimento
-- PostgreSQL para o ambiente do n8n
-- Redis para cache, filas, agrupamento e memória conversacional
-- Evolution API para integração com WhatsApp
-- n8n para automação
-- Google Gemini para processamento de linguagem e transcrição de áudio
-- Laravel Reverb/Pusher para eventos em tempo real
+- MySQL or SQLite for development
+- PostgreSQL for the n8n environment
+- Redis for cache, queues, batching, and conversational memory
+- Evolution API for WhatsApp integration
+- n8n for automation
+- Google Gemini for language processing and audio transcription
+- Laravel Reverb/Pusher for real-time events
 
-## Estrutura do projeto
+## Project structure
 
 ```text
 app/
-├── Actions/              Ações de autenticação e regras de negócio
-├── Events/               Eventos broadcast, incluindo criação de pedidos
-├── Filament/Resources/   CRUDs do painel administrativo
-├── Http/Controllers/     Webhooks, conversas e cardápio
-├── Models/               Modelos User, Orders, Menu e Whatsapp
-├── Providers/            Configuração da aplicação e do Filament
-└── Services/             Evolution API, pedidos e estado da conversa
+├── Actions/              Authentication actions and business rules
+├── Events/               Broadcast events, including order creation
+├── Filament/Resources/   Admin panel CRUD resources
+├── Http/Controllers/     Webhooks, conversations, and menu
+├── Models/               User, Orders, Menu, and Whatsapp models
+├── Providers/            Application and Filament configuration
+└── Services/             Evolution API, orders, and conversation state
 
 database/
-├── factories/            Factories para testes
-├── migrations/           Estrutura do banco
-└── seeders/              Dados iniciais
+├── factories/            Test factories
+├── migrations/           Database schema
+└── seeders/              Seed data
 
 resources/
-├── css/                  Estilos
-├── js/                   JavaScript, Echo e passkeys
-└── views/                Views Blade e telas do painel
+├── css/                  Styles
+├── js/                   JavaScript, Echo, and passkeys
+└── views/                Blade views and panel screens
 
 routes/
-├── api.php               Endpoints da API e webhooks
-├── channels.php          Canais broadcast
-├── settings.php          Rotas de configurações
-└── web.php               Rotas web e painel
+├── api.php               API endpoints and webhooks
+├── channels.php          Broadcast channels
+├── settings.php          Settings routes
+└── web.php               Web and panel routes
 
 n8n/
-├── docker-compose.yml    Serviços n8n, Evolution API, Redis e PostgreSQL
-└── workflow.json         Workflow de atendimento automatizado
+├── docker-compose.yml    n8n, Evolution API, Redis, and PostgreSQL services
+└── workflow.json         Automated support workflow
 ```
 
-## Requisitos
+## Requirements
 
-- PHP `8.3` ou superior
+- PHP `8.3` or higher
 - Composer
-- Node.js e npm
-- MySQL ou SQLite
+- Node.js and npm
+- MySQL or SQLite
 - Redis
-- Docker e Docker Compose, caso os serviços de automação sejam executados localmente
+- Docker and Docker Compose, if automation services run locally
 
-## Instalação
+## Installation
 
-O comando de setup instala dependências, cria o ambiente, gera a chave, executa migrations e compila os assets:
+The setup command installs dependencies, creates the environment, generates the app key, runs migrations, and builds assets:
 
 ```bash
 composer run setup
 ```
 
-Instalação manual:
+Manual installation:
 
 ```bash
 composer install
@@ -185,11 +185,11 @@ npm install
 npm run build
 ```
 
-Configure o arquivo `.env` antes de iniciar a aplicação. Nunca versiona `.env` ou credenciais de serviços externos.
+Configure the `.env` file before starting the application. Never version `.env` or external service credentials.
 
-## Configuração de ambiente
+## Environment configuration
 
-Variáveis principais:
+Main variables:
 
 ```env
 APP_NAME=
@@ -229,13 +229,13 @@ VITE_REVERB_PORT=
 VITE_REVERB_SCHEME=
 ```
 
-O projeto aceita SQLite, MySQL/MariaDB, PostgreSQL e SQL Server via configuração do Laravel. O ambiente local pode usar SQLite, enquanto o `.env` de produção deve apontar para o banco escolhido.
+The project supports SQLite, MySQL/MariaDB, PostgreSQL, and SQL Server through Laravel configuration. The local environment can use SQLite, while production `.env` should point to the chosen database.
 
-## Execução
+## Running
 
 ### Laravel
 
-Executa o ambiente de desenvolvimento configurado no projeto:
+Runs the development environment configured in the project:
 
 ```bash
 composer run dev
@@ -243,137 +243,137 @@ composer run dev
 
 ### Frontend
 
-Servidor de desenvolvimento:
+Development server:
 
 ```bash
 npm run dev
 ```
 
-Build de produção:
+Production build:
 
 ```bash
 npm run build
 ```
 
-### Serviços n8n
+### n8n services
 
-Na pasta `n8n/`:
+Inside the `n8n/` folder:
 
 ```bash
 docker compose up -d
 ```
 
-Serviços definidos em `n8n/docker-compose.yml`:
+Services defined in `n8n/docker-compose.yml`:
 
-| Serviço | Imagem | Porta |
+| Service | Image | Port |
 |---|---|---:|
 | n8n | `docker.n8n.io/n8nio/n8n:latest` | `5678` |
 | Evolution API | `evoapicloud/evolution-api:latest` | `8080` |
-| Redis | `redis:7-alpine` | interna |
-| PostgreSQL | `postgres:16-alpine` | interna |
+| Redis | `redis:7-alpine` | internal |
+| PostgreSQL | `postgres:16-alpine` | internal |
 
-O Laravel roda separadamente. Os endpoints usados pelo workflow precisam estar acessíveis pelo ambiente onde o n8n está executando.
+Laravel runs separately. Endpoints used by the workflow must be reachable from the environment where n8n is running.
 
-## Endpoints principais
+## Main endpoints
 
-| Método | Endpoint | Função |
+| Method | Endpoint | Function |
 |---|---|---|
-| `POST` | `/api/webhook/evolution` | Recebe eventos da Evolution API |
-| `POST` | `/api/webhook/order` | Recebe pedidos finalizados pelo n8n |
-| `POST` | `/api/saveMessage` | Persiste mensagens geradas pela automação |
-| `GET` | `/api/conversation/{remoteJid}/finished` | Consulta se a conversa foi finalizada |
-| `GET` | `/api/menu/all` | Lista todo o cardápio |
-| `GET` | `/api/menu/available` | Lista itens disponíveis |
-| `GET` | `/api/user` | Retorna usuário autenticado |
-| `POST` | `/admin/whatsapp/messages` | Envia mensagem pelo painel |
-| `GET` | `/admin/whatsapp/conversation-messages` | Consulta mensagens da conversa |
+| `POST` | `/api/webhook/evolution` | Receives Evolution API events |
+| `POST` | `/api/webhook/order` | Receives completed orders from n8n |
+| `POST` | `/api/saveMessage` | Persists messages generated by automation |
+| `GET` | `/api/conversation/{remoteJid}/finished` | Checks whether the conversation is finished |
+| `GET` | `/api/menu/all` | Lists the full menu |
+| `GET` | `/api/menu/available` | Lists available items |
+| `GET` | `/api/user` | Returns authenticated user |
+| `POST` | `/admin/whatsapp/messages` | Sends message from the panel |
+| `GET` | `/admin/whatsapp/conversation-messages` | Retrieves conversation messages |
 
-## Domínios de negócio
+## Business domains
 
-### Mensagens WhatsApp
+### WhatsApp messages
 
-`EvolutionService` processa eventos `messages.upsert`, evita duplicidade por `message_id`, salva mensagens e encaminha dados ao n8n.
+`EvolutionService` processes `messages.upsert` events, prevents duplication by `message_id`, saves messages, and forwards data to n8n.
 
-Mensagens de áudio são armazenadas em `storage/app/public/whatsapp/audio` e transcritas pelo endpoint configurado em `GEMINI_INTERACTIONS_URL`.
+Audio messages are stored in `storage/app/public/whatsapp/audio` and transcribed by the endpoint configured in `GEMINI_INTERACTIONS_URL`.
 
-O painel permite consultar conversas e enviar mensagens pela Evolution API.
+The panel allows viewing conversations and sending messages through Evolution API.
 
-### Cardápio
+### Menu
 
-Os recursos Filament e os endpoints de menu expõem itens, preços, categorias, tamanhos e disponibilidade.
+Filament resources and menu endpoints expose items, prices, categories, sizes, and availability.
 
-O agente n8n deve consultar as ferramentas de cardápio. Preços e disponibilidade não devem ser inferidos somente pelo texto da conversa.
+The n8n agent must query menu tools. Prices and availability should not be inferred only from conversation text.
 
-### Pedidos
+### Orders
 
-`OrderService` cria pedidos com status inicial `pending`, salva dados de entrega e pagamento, dispara o evento `OrderCreated` e marca a conversa como finalizada temporariamente no Redis.
+`OrderService` creates orders with initial `pending` status, saves delivery and payment data, fires the `OrderCreated` event, and temporarily marks the conversation as finished in Redis.
 
-O evento é transmitido no canal público `orders`, permitindo atualização em tempo real no painel.
+The event is broadcast on the public `orders` channel, enabling real-time updates in the panel.
 
-## Painel administrativo
+## Admin panel
 
-O painel Filament fica disponível em:
+The Filament panel is available at:
 
 ```text
 /admin
 ```
 
-Recursos principais:
+Main resources:
 
 - Menus
-- Pedidos
-- WhatsApp e mensagens
+- Orders
+- WhatsApp and messages
 
-O painel usa autenticação, notificações persistidas, Livewire e atualização em tempo real via Reverb/Pusher.
+The panel uses authentication, persisted notifications, Livewire, and real-time updates via Reverb/Pusher.
 
-## Testes e qualidade
+## Testing and quality
 
-Executa lint com correção:
+Run lint with auto-fix:
 
 ```bash
 composer run lint
 ```
 
-Verifica lint sem alterar arquivos:
+Check lint without changing files:
 
 ```bash
 composer run lint:check
 ```
 
-Executa análise estática:
+Run static analysis:
 
 ```bash
 composer run types:check
 ```
 
-Executa suite completa:
+Run full suite:
 
 ```bash
 composer run test
 ```
 
-A suite PHPUnit usa configurações isoladas para testes, incluindo cache em memória, fila síncrona, sessão em array e broadcast nulo.
+The PHPUnit suite uses isolated test settings, including in-memory cache, synchronous queue, array session, and null broadcast.
 
-## Persistência
+## Persistence
 
-Entidades principais:
+Main entities:
 
-- `users`: usuários e autenticação
-- `orders`: pedidos, cliente, telefone, status, total e timestamps
-- `menu`: itens, preços, categorias, tamanhos e disponibilidade
-- `whatsapp`: mensagens, remetente, tipo, IDs da Evolution API, instância, áudio e conversa
+- `users`: users and authentication
+- `orders`: orders, customer, phone, status, total, and timestamps
+- `menu`: items, prices, categories, sizes, and availability
+- `whatsapp`: messages, sender, type, Evolution API IDs, instance, audio, and conversation
 
-O Laravel também usa tabelas para sessões, cache e jobs quando os drivers configurados usam banco.
+Laravel also uses tables for sessions, cache, and jobs when configured drivers use the database.
 
-## Segurança e operação
+## Security and operations
 
-- Não versione `.env`, chaves de API, tokens ou senhas.
-- Troque credenciais padrão do Docker antes de expor serviços.
-- Restrinja endpoints de webhook por rede, assinatura ou autenticação quando possível.
-- Revise URLs internas e dados em `pinData` antes de exportar o workflow.
-- Use HTTPS em ambientes acessíveis pela internet.
-- Mantenha volumes Docker persistentes e faça backup do PostgreSQL, Redis e dados do n8n.
+- Do not version `.env`, API keys, tokens, or passwords.
+- Change default Docker credentials before exposing services.
+- Restrict webhook endpoints by network, signature, or authentication whenever possible.
+- Review internal URLs and `pinData` data before exporting the workflow.
+- Use HTTPS in internet-facing environments.
+- Keep Docker volumes persistent and back up PostgreSQL, Redis, and n8n data.
 
-## Licença
+## License
 
-Nenhuma licença foi identificada no repositório. Defina uma licença antes de distribuir o projeto.
+No license was identified in the repository. Define a license before distributing the project.
